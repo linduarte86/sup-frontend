@@ -1,0 +1,104 @@
+.main{
+  width: 100%;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: url('../../public/backgroundLogin.jpg') no-repeat center;
+  background-size: cover;
+  z-index: -1; // Garante que o fundo fique atrás do conteúdo
+}
+
+.containerCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--blue-900);
+  border-radius: 10px;
+  max-width: 500px;
+  padding: 32px;
+  box-sizing: border-box;
+  margin: 25vh auto auto;
+  background-color: rgba(245, 245, 245, 0.7); // translúcido
+}
+
+.login {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 400px;
+
+  form {
+    color: var(--black);
+    padding-bottom: 16px;
+    font-size: 18px;
+    display: flex;
+    flex-direction: column;
+    width: 90%;
+    gap: 16px;
+  }
+
+  form button {
+    height: 40px;
+    font-size: 16px;
+    border: 0;
+    border-radius: 8px;
+    background-color: var(--blue-900);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    transition: all 0.5s;
+  }
+
+  form button:hover {
+    background-color: #1976d2; // Cor ligeiramente mais escura ao passar o mouse
+    transform: scale(1.05);
+  } 
+}
+
+.input {
+  height: 40px;
+  border: 0;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  color: var(--black);
+  transition: border-color 0.5s;
+}
+
+.input:hover {
+  border: 2px solid var(--blue-900);
+  outline: none;
+}
+
+.label {
+  color: var(--black);
+  font-weight: 500;
+  font-size: 16px;
+  margin-bottom: 6px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.required {
+  color: red;
+  font-size: 16px;
+}
+
+@media (max-width: 600px) {
+  .containerCenter {
+    margin: 25vh auto 25vh auto;
+    max-width: 350px;// 
+    padding: 16px;
+  }
+  .login {
+    width: 95%; //
+  }
+}
