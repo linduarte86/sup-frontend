@@ -48,3 +48,16 @@ body, input, textarea, select, button {
     font-size: 93.75%; // 15px
   }
 }
+
+.appLayout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.appLayout .appMain {
+  flex: 1;
+  padding: 24px;
+  background: transparent;
+  /* espaço extra no topo para o header fixo (50px) */
+  padding-top: calc(24px + 50px);
+}

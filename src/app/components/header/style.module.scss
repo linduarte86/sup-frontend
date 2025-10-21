@@ -1,0 +1,50 @@
+.header {
+  position: fixed;
+  top: 0;
+  left: 220px; /* considera a largura da sidebar */
+  right: 0;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  margin-top: 0px;
+  margin-bottom: 10px;
+  background: #c7f2f315;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.212);
+  z-index: 90;
+}
+
+.titleArea {
+  flex: 1;
+  margin-left: 50px;
+}
+
+.userArea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.username {
+  font-weight: 600;
+}
+
+.logoutBtn {
+  background: transparent;
+  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.logoutBtn:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+/* adaptações para telas pequenas onde a sidebar é overlay */
+@media (max-width: 720px) {
+  .header {
+    left: 0;
+    right: 0;
+  }
+}
