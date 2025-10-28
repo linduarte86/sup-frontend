@@ -1,5 +1,21 @@
-export default function Page() {
+import styles from './style.module.scss';
+import { BtCadastrar } from '@/app/components/button/btCadastrar';
+import ContatosTable from '@/app/components/contatos/ContatosTable';
+
+
+export default function Contatos() {
   return (
-    <h1>Contatos</h1>
+
+    <main className={styles.container}>
+
+      <div className={styles.btCadastrar}>
+        <BtCadastrar name='Cadastrar' endpoint='contatos'/>
+      </div>
+
+      <div className={styles.divTable}>
+        <ContatosTable/>
+      </div>
+
+    </main>
   )
 }

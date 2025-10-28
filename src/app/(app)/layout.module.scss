@@ -1,0 +1,39 @@
+.appLayout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg, #f6f8fa);
+}
+
+.appMain {
+  flex: 1;
+  padding-top: 64px; /* espaço para header fixo */
+  padding-left: 240px; /* espaço para a sidebar fixa (largura + gap) */
+  background: transparent;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 720px) {
+    padding-left: 0; /* remover espaço lateral quando sidebar vira overlay */
+  }
+}
+
+.contentWrapper {
+  flex: 1;
+  overflow: auto; /* scroll apenas no conteúdo */
+  padding: 16px;
+
+  @media (max-width: 720px) {
+    padding: 12px 8px;
+    overflow-y: auto;
+    overflow-x: hidden; /* evita scroll horizontal no wrapper; table pode controlar overflow-x */
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+.footerWrapper {
+  //position: sticky;
+  bottom: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  background: transparent;
+}

@@ -4,6 +4,8 @@ import React from 'react';
 import styles from './style.module.scss';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { deleteCookie } from 'cookies-next';
+
 
 type HeaderProps = {
   username?: string;
@@ -14,11 +16,13 @@ export default function Header({ username = 'Usuário' }: HeaderProps) {
 
   async function handleLogout() {
     try {
-      await fetch('/api/logout', { method: 'POST' });
+      await deleteCookie('session', { path: '/' });
+      await deleteCookie('username', { path: '/' });
     } catch (err) {
       // ignore
     }
-    router.push('/login');
+    router.replace('/login');
+    
   }
 
   return (

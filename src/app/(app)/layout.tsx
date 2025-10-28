@@ -2,9 +2,13 @@
 import Sidebar from '@/app/components/sidebar';
 import Header from '@/app/components/header';
 import { cookies } from 'next/headers';
+import ToasterProvider from '@/app/components/ToasterProvider';
+
+import styles from './layout.module.scss';
+import { Footer } from '../components/footer';
 
 export const metadata = {
-  title: 'AP-SUP-WEB',
+  title: 'APEL-SUP-WEB',
 };
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -12,12 +16,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const username = cookieStore.get('username')?.value ?? 'Usuário';
 
   return (
-    <div className="appLayout">
-      <Sidebar />
-      <main className="appMain">
-        <Header username={username} />
-        {children}
-      </main>
-    </div>
+    <>
+      <ToasterProvider />
+      <div className={styles.appLayout}>
+        <Sidebar />
+        <main className={styles.appMain}>
+          <Header username={username} />
+          <div className={styles.contentWrapper}>
+            {children}
+          </div>
+          <div className={styles.footerWrapper}>
+            <Footer />
+          </div>
+        </main>
+      </div>
+    </>
   );
 }

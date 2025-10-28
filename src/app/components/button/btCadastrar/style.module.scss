@@ -1,0 +1,17 @@
+.btCadastrar {
+  background-color: var(--blue-900);
+  border: none;
+  color: var(--white);
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 6px 0px 0px 10px;
+  border-radius: 5px;
+  transition: 0.5s;
+}
+
+.btCadastrar:hover {
+  background-color: #45a049;
+}
