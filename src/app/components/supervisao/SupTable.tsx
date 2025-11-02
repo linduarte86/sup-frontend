@@ -2,10 +2,11 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import styles from './style.module.scss';
-import { Edit3, Trash2 } from 'lucide-react';
+import { Edit3, Trash2, LayoutGrid } from 'lucide-react';
 import { api } from '@/services/api';
 import SupModal from './SupModal';
 import SupEditModal from './SupEditModal';
+import SupZonaEditModal from './SupZonaEditModal';
 import { toast } from 'sonner';
 
 type Sup = {
@@ -32,6 +33,7 @@ export default function SupTable() {
   const [pageSize, setPageSize] = useState(10);
   const [openModal, setOpenModal] = useState(false);
   const [editing, setEditing] = useState<Sup | null>(null);
+  const [zonaEditing, setZonaEditing] = useState<Sup | null>(null);
 
   useEffect(() => { fetchSup(); }, []);
 
@@ -88,6 +90,53 @@ export default function SupTable() {
     }
   }
 
+  async function setEditZona(updated: Sup) {
+    try {
+      // se o objeto já inclui `zonas` (ou `Zonas` vindo do backend), usa direto (evita chamada extra ao backend)
+      const rawZonas = (updated as any).zonas ?? (updated as any).Zonas ?? null;
+      if (rawZonas && Array.isArray(rawZonas)) {
+        const mapped = rawZonas.map((z: any) => ({ numeroCanal: z.numeroCanal ?? z.numero_can ?? z.channel ?? 0, name: z.name ?? z.nome ?? '' }));
+        setZonaEditing({ ...(updated as any), zonas: mapped });
+        return;
+      }
+
+      setLoading(true);
+      const res = await api.get(`/zonas/${updated.id}`, { headers: { Authorization: getToken() ? `Bearer ${getToken()}` : '' } });
+      // normaliza resposta: pode vir array, ou { zonas: [...] }, ou { data: [...] }
+      let zonasData: any[] = [];
+      if (Array.isArray(res.data)) {
+        zonasData = res.data;
+      } else if (res.data && typeof res.data === 'object') {
+        zonasData = res.data?.zonas ?? res.data?.Zonas ?? res.data?.data ?? res.data?.items ?? [];
+      } else {
+        zonasData = [];
+      }
+
+      const mapped = zonasData.map((z: any) => ({ numeroCanal: z.numeroCanal ?? z.numero_can ?? z.channel ?? 0, name: z.name ?? z.nome ?? '' }));
+
+      setZonaEditing({ ...(updated as any), zonas: mapped });
+    } catch (err: any) {
+      console.error('Erro ao carregar zonas', err);
+      toast.error('Não foi possível carregar zonas');
+    } finally {
+      setLoading(false);
+    }
+  }
+  
+  async function handleSaveZonas(payload: { id: string | number; zonas: { numeroCanal: number; name: string }[] }) {
+    try {
+      const headers = { Authorization: getToken() ? `Bearer ${getToken()}` : '' };
+      await api.put(`/zonas/${payload.id}`, { zonas: payload.zonas }, { headers });
+      toast.success('Zonas salvas');
+      setZonaEditing(null);
+      fetchSup();
+    } catch (err: any) {
+      console.error('Erro ao salvar zonas', err);
+      toast.error(err?.response?.data?.message || 'Erro ao salvar zonas');
+      throw err;
+    }
+  }
+
   const filtered = useMemo(() => {
     const arr = Array.isArray(items) ? items : [];
     const q = String(query ?? '').trim().toLowerCase();
@@ -130,7 +179,7 @@ export default function SupTable() {
             <th>Descrição</th>
             <th>IP</th>
             <th>Porta</th>
-            <th style={{ width: 120 }}>Ações</th>
+            <th style={{ width: 130 }}>Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -145,6 +194,7 @@ export default function SupTable() {
                 <td>{s.ip ?? '-'}</td>
                 <td>{s.port}</td>
                 <td>
+                  <button className={styles.iconBtn} onClick={() => setEditZona(s)} aria-label="Editar"><LayoutGrid size={16} /></button>
                   <button className={styles.iconBtn} onClick={() => setEditing(s)} aria-label="Editar"><Edit3 size={16} /></button>
                   <button className={styles.iconBtn} onClick={() => handleDelete(s.id)} aria-label="Deletar"><Trash2 size={16} /></button>
                 </td>
@@ -164,6 +214,14 @@ export default function SupTable() {
 
       {openModal && <SupModal onClose={() => setOpenModal(false)} onCreate={handleCreate} />}
       {editing && <SupEditModal sup={editing} onClose={() => setEditing(null)} onSave={handleSave} />}
+      {zonaEditing && (
+        <SupZonaEditModal
+          id={zonaEditing.id as string | number}
+          zonas={(zonaEditing as any).zonas ?? []}
+          onClose={() => setZonaEditing(null)}
+          onSave={handleSaveZonas}
+        />
+      )}
     </div>
   );
 }

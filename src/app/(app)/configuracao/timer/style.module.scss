@@ -1,0 +1,41 @@
+.container{
+  display: contents;
+}
+
+.divCard{
+  height: 220px;
+  width: auto;
+  background-color: white;
+  border-radius: 8px;
+  margin-bottom: 40px;
+  padding: 20px;
+}
+
+.titulo{
+  height: 50px;
+  width: auto;
+  background-color: white;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.titulo h1{
+  font-size: 24px;
+  font-weight: 600;
+  color: #202222;
+  padding: 10px 0 0 10px;
+}
+
+@media (max-width: 768px) {
+  .divCard{
+    height: auto;
+    width: auto;
+    margin-bottom: 20px;
+    padding: 10px;
+  }
+
+  .titulo h1{
+    font-size: 20px;
+    padding: 10px 0 0 10px;
+  }
+}

@@ -27,7 +27,7 @@ export default function Header({ username = 'Usuário' }: HeaderProps) {
 
   return (
     <header className={styles.header}>
-      <div className={styles.titleArea}>AP-SUP-WEB_V1</div>
+      <div className={styles.titleArea}>AP-SUP-WEB_v1</div>
 
       <div className={styles.userArea}>
         <span className={styles.username}>{username}</span>
