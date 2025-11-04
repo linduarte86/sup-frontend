@@ -82,7 +82,6 @@ export default function LogsTable() {
   return (
     <div className={styles.tableWrap}>
       <div className={styles.headerRow}>
-        <h2>Logs</h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div>{loading ? 'Carregando...' : `${total} registros`}</div>
         </div>
@@ -138,6 +137,7 @@ export default function LogsTable() {
                         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                           <div style={{ minWidth: 220 }}>
                             <strong>Equipamento</strong>
+                            <td/>
                             <div>Nome: {l.equipamento?.name ?? '-'}</div>
                             <div>IP: {l.equipamento?.ip ?? '-'}</div>
                             <div>Porta: {l.equipamento?.port ?? '-'}</div>
@@ -146,12 +146,13 @@ export default function LogsTable() {
                           </div>
                           <div style={{ flex: 1 }}>
                             <strong>Falhas</strong>
+                            <td/>
                             {Array.isArray(l.itens) && l.itens.length > 0 ? (
                               <ul>
                                 {l.itens.map((it) => (
                                   <li key={it.id}>
-                                    <div><strong>{it.tipo ?? ''}{it.indice ? ` #${it.indice}` : ''}</strong> — {it.descricao ?? ''}</div>
-                                    {it.zona && <div style={{ fontSize: 12, color: '#667' }}>Zona: {it.zona?.name ?? it.zona?.nome ?? '-'}</div>}
+                                    <div><strong>{it.tipo ?? ''}</strong> — {it.descricao ?? ''}</div>
+                                    {it.zona && <div style={{ fontSize: 15, color: '#ff0000ff' }}>Zona: {it.zona?.name ?? it.zona?.nome ?? '-'}</div>}
                                   </li>
                                 ))}
                               </ul>
