@@ -5,6 +5,7 @@ import styles from './style.module.scss';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { deleteCookie } from 'cookies-next';
+import { SomAlerta } from '../somAlerta';
 
 
 type HeaderProps = {
@@ -28,6 +29,7 @@ export default function Header({ username = 'Usuário' }: HeaderProps) {
   return (
     <header className={styles.header}>
       <div className={styles.titleArea}>AP-SUP-WEB_v1</div>
+      <div className={styles.btSom}><SomAlerta/></div>
 
       <div className={styles.userArea}>
         <span className={styles.username}>{username}</span>

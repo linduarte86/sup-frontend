@@ -1,0 +1,15 @@
+.page {
+  display: flex;
+  justify-content: space-between; /* título à esquerda, botão à direita */
+  align-items: center;            /* centraliza verticalmente */
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem; /* espaço abaixo do cabeçalho */
+}
+
+.page h1 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #333;
+}

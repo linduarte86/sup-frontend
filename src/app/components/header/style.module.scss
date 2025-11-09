@@ -41,6 +41,10 @@
   background: rgba(0,0,0,0.04);
 }
 
+.btSom {
+  margin-right: 20px;
+}
+
 /* adaptações para telas pequenas onde a sidebar é overlay */
 @media (max-width: 720px) {
   .header {

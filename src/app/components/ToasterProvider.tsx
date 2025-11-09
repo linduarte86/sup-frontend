@@ -4,5 +4,5 @@ import React from 'react';
 import { Toaster } from 'sonner';
 
 export default function ToasterProvider() {
-  return <Toaster />;
+  return <Toaster richColors />;
 }

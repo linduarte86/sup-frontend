@@ -66,7 +66,7 @@ export default function LogsTable() {
     if (!q) return arr;
     return arr.filter(l =>
       String(l.descricao ?? l.message ?? l.msg ?? l.description ?? '').toLowerCase().includes(q) ||
-      String(l.level ?? '').toLowerCase().includes(q) ||
+      String(l.created_at ?? '').toLowerCase().includes(q) ||
       String(l.equipamento?.name ?? '').toLowerCase().includes(q) ||
       (Array.isArray(l.itens) && l.itens.some(it => String(it.descricao ?? '').toLowerCase().includes(q)))
     );
@@ -88,7 +88,7 @@ export default function LogsTable() {
       </div>
 
       <div className={styles.controlsRow}>
-        <input placeholder="Buscar por mensagem ou nível..." value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} className={styles.searchInput} />
+        <input placeholder="Buscar por data" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} className={styles.searchInput} />
         <div className={styles.pageSizeWrap}>
           <label htmlFor="pageSize">Por página:</label>
           <select id="pageSize" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}>
@@ -121,7 +121,7 @@ export default function LogsTable() {
                     <td style={{ whiteSpace: 'pre-wrap' }}>{String(l.descricao ?? l.message ?? l.msg ?? l.description ?? '-')}</td>
                     <td>{l.equipamento?.name ?? '-'}</td>
                     <td style={{ whiteSpace: 'pre-wrap' }}>{(Array.isArray(l.itens) && l.itens.length > 0) ? l.itens.map(it => `${it.tipo ?? ''}${it.indice ? ' #' + it.indice : ''}: ${it.descricao ?? ''}`).join('\n') : '-'}</td>
-                    
+
                     <td>{l.created_at ?? l.timestamp ?? '-'}</td>
                     <td>
                       <button className={styles.iconBtn} onClick={() => toggleExpand(l.id)} aria-label="Detalhes">
@@ -136,17 +136,17 @@ export default function LogsTable() {
                       <td colSpan={6}>
                         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                           <div style={{ minWidth: 220 }}>
-                            <strong>Equipamento</strong>
-                            <td/>
+                            <strong>Equipamento</strong>                         
                             <div>Nome: {l.equipamento?.name ?? '-'}</div>
+                            <div>Modelo: {l.equipamento?.modelo ?? '-'}</div>
+                            <div>Descrição: {l.equipamento?.description ?? '-'}</div>
                             <div>IP: {l.equipamento?.ip ?? '-'}</div>
                             <div>Porta: {l.equipamento?.port ?? '-'}</div>
-                            <div>Modelo: {l.equipamento?.modelo ?? '-'}</div>
                             <div>Ativo: {String(l.equipamento?.ativo ?? '-')}</div>
                           </div>
                           <div style={{ flex: 1 }}>
                             <strong>Falhas</strong>
-                            <td/>
+                            
                             {Array.isArray(l.itens) && l.itens.length > 0 ? (
                               <ul>
                                 {l.itens.map((it) => (

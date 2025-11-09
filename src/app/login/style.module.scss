@@ -4,7 +4,7 @@
   position: relative; /* evita sobreposição que bloqueia inputs */
   top: 0;
   left: 0;
-  background: url('../../../public/backgroundLogin.jpeg') no-repeat center;
+  background: url('../../../public/login.svg') no-repeat center;
   background-size: cover;
   background-position: top center;
   overflow: auto; /* evita perda de rolagem */
@@ -19,7 +19,7 @@
   justify-content: center;
   border: 2px solid var(--blue-900);
   border-radius: 10px;
-  max-width: 500px;
+  max-width: 400px;
   padding: 32px;
   box-sizing: border-box;
   margin: 18vh auto 0;
@@ -56,7 +56,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 400px;
+  width: 300px;
 
   form {
     color: var(--black);
