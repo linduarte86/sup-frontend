@@ -9,7 +9,7 @@ import styles from './style.module.scss';
 
 const menus = [
   { href: '/dashboard', label: 'Dashboard', Icon: Home },
-  { href: '/supervisao', label: 'Supervisão', Icon: Monitor },
+  { href: '/supervisao', label: 'Monitoramento', Icon: Monitor },
   {
     href: '/configuracao',
     label: 'Configuração',

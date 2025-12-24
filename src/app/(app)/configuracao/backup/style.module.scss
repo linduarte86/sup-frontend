@@ -1,0 +1,27 @@
+.container {
+  display: contents;
+  max-width: 1200px;
+}
+
+.backup {
+  margin-top: 20px;
+  //border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  background-color: white;
+}
+
+.titulo{
+  height: 50px;
+  width: auto;
+  background-color: white;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.titulo h1{
+  font-size: 24px;
+  font-weight: 600;
+  color: #202222;
+  padding: 10px 0 0 10px;
+}

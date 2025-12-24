@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useRouter, usePathname } from 'next/navigation';
 import { initAlertService } from '@/services/alertService';
+import { Megaphone } from 'lucide-react';
 import styles from './SomAlerta.module.scss';
 
 export function SomAlerta() {
@@ -23,7 +24,7 @@ export function SomAlerta() {
 
   useEffect(() => {
     initAlertService(async (falha) => {
-      console.log('🚨 Global alert:', falha);
+      console.log('Global alert:', falha);
 
       if (somAtivo && audio) {
         try {
@@ -34,9 +35,10 @@ export function SomAlerta() {
         }
       }
 
-      toast.error(`Nova falha: ${falha.mensagem}`);
+      //toast.error(`Nova falha ${falha}`);
 
       if (pathname !== '/supervisao') {
+        toast.error(`Nova falha detectada: ${falha.equipamentoDescricao}`);
         router.push('/supervisao');
       }
     });
@@ -45,11 +47,12 @@ export function SomAlerta() {
   return (
     <div className={styles.container}>
       {!somAtivo ? (
-        <button className={styles.botaoAtivar} onClick={() => setSomAtivo(true)}>
-          Ativar som de alerta
+        <button title='Ativar som de alerta' className={styles.botaoAtivar} onClick={() => setSomAtivo(true)}>
+          <Megaphone/>
+          Alerta
         </button>
       ) : (
-        <p className={styles.ativo}>✅ Som de alerta ativado</p>
+        <p className={styles.ativo}>Alerta ativado</p>
       )}
     </div>
   );

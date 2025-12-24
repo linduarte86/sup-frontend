@@ -1,5 +1,11 @@
+
+import SupMonitor1 from "@/app/components/supMonitor/monitor1"
+
 export default function Page() {
   return (
-    <h1>Dashboard</h1>
+    <main>
+      <h1>Dashboard</h1>
+      <SupMonitor1 />
+    </main>
   )
 }

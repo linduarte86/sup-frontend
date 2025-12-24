@@ -5,6 +5,7 @@ import styles from './style.module.scss';
 import { Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '@/services/api';
 import { toast } from 'sonner';
+import { jsPDF } from 'jspdf';
 
 function getToken() {
   return document.cookie.split('; ').find(row => row.startsWith('session='))?.split('=')[1];
@@ -23,6 +24,7 @@ type Log = {
 export default function LogsTable() {
   const [items, setItems] = useState<Log[]>([]);
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
+  const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -34,6 +36,55 @@ export default function LogsTable() {
     if (id == null) return;
     const key = String(id);
     setExpandedIds(prev => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  function toggleSelect(id?: string | number) {
+    if (id == null) return;
+    const key = String(id);
+    setSelectedIds(prev => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  function handleSelectAllVisible(selectAll: boolean) {
+    const ids = filtered.map(it => String(it.id));
+    setSelectedIds(prev => {
+      const copy = { ...prev };
+      ids.forEach(id => { copy[id] = selectAll; });
+      return copy;
+    });
+  }
+
+  async function generatePdf() {
+    const selected = items.filter(i => selectedIds[String(i.id)]);
+    if (!selected || selected.length === 0) return toast.error('Nenhum log selecionado');
+
+    const doc = new jsPDF();
+    let y = 12;
+    doc.setFontSize(14);
+    doc.text('Logs selecionados', 14, y);
+    y += 8;
+    doc.setFontSize(11);
+
+    selected.forEach((l, idx) => {
+      const header = `${idx + 1}. ${l.descricao ?? l.message ?? '-'} (${l.equipamento?.name ?? '-'})`;
+      const created = `Data: ${l.created_at ?? l.timestamp ?? '-'} `;
+      doc.text(header, 14, y);
+      y += 6;
+      doc.text(created, 14, y);
+      y += 6;
+      if (Array.isArray(l.itens) && l.itens.length > 0) {
+        l.itens.forEach(it => {
+          const line = `- ${it.tipo ?? ''}: ${it.descricao ?? ''} (Zona: ${it.zona?.name ?? '-'})`;
+          const split = doc.splitTextToSize(line, 180);
+          doc.text(split, 16, y);
+          y += (split.length * 6);
+          if (y > 280) { doc.addPage(); y = 12; }
+        });
+      }
+      y += 6;
+      if (y > 280) { doc.addPage(); y = 12; }
+    });
+
+    doc.save('logs.pdf');
   }
 
   async function fetchLogs() {
@@ -58,6 +109,20 @@ export default function LogsTable() {
       console.error('Erro ao excluir log', err);
       toast.error('Não foi possível excluir');
     }
+  }
+
+  async function handleDeleteAll() {
+    if (!confirm('Confirma exclusão de TODOS os logs? Esta ação não pode ser desfeita.')) return;
+    try {
+      setLoading(true);
+      await api.delete('/logs', { headers: { Authorization: getToken() ? `Bearer ${getToken()}` : '' } });
+      toast.success('Todos os logs foram excluídos');
+      setSelectedIds({});
+      fetchLogs();
+    } catch (err: any) {
+      console.error('Erro ao excluir todos os logs', err);
+      toast.error('Não foi possível excluir todos os logs');
+    } finally { setLoading(false); }
   }
 
   const filtered = useMemo(() => {
@@ -88,6 +153,18 @@ export default function LogsTable() {
       </div>
 
       <div className={styles.controlsRow}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input
+              type="checkbox"
+              checked={filtered.length > 0 && filtered.every(it => !!selectedIds[String(it.id)])}
+              onChange={(e) => handleSelectAllVisible(e.target.checked)}
+            />
+            Selecionar todos
+          </label>
+          <button type="button" onClick={generatePdf} className={styles.btnPDF}>Gerar PDF</button>
+
+        </div>
         <input placeholder="Buscar por data" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} className={styles.searchInput} />
         <div className={styles.pageSizeWrap}>
           <label htmlFor="pageSize">Por página:</label>
@@ -97,11 +174,16 @@ export default function LogsTable() {
             <option value={20}>20</option>
           </select>
         </div>
+
+        <button type="button" title="Excluir todos os logs" onClick={handleDeleteAll} className={styles.btnDeleteAll}>
+          <Trash2 />
+        </button>
       </div>
 
       <table className={styles.table}>
         <thead>
           <tr>
+            <th style={{ width: 40 }}></th>
             <th>Descrição</th>
             <th>Equipamento</th>
             <th>Falhas</th>
@@ -118,9 +200,12 @@ export default function LogsTable() {
               return (
                 <React.Fragment key={String(l.id)}>
                   <tr>
+                    <td>
+                      <input type="checkbox" checked={!!selectedIds[String(l.id)]} onChange={() => toggleSelect(l.id)} />
+                    </td>
                     <td style={{ whiteSpace: 'pre-wrap' }}>{String(l.descricao ?? l.message ?? l.msg ?? l.description ?? '-')}</td>
                     <td>{l.equipamento?.name ?? '-'}</td>
-                    <td style={{ whiteSpace: 'pre-wrap' }}>{(Array.isArray(l.itens) && l.itens.length > 0) ? l.itens.map(it => `${it.tipo ?? ''}${it.indice ? ' #' + it.indice : ''}: ${it.descricao ?? ''}`).join('\n') : '-'}</td>
+                    <td style={{ whiteSpace: 'pre-wrap' }}>{(Array.isArray(l.itens) && l.itens.length > 0) ? l.itens.map(it => `${it.tipo ?? ''}: ${it.descricao ?? ''}`).join('\n') : '-'}</td>
 
                     <td>{l.created_at ?? l.timestamp ?? '-'}</td>
                     <td>
@@ -136,7 +221,7 @@ export default function LogsTable() {
                       <td colSpan={6}>
                         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                           <div style={{ minWidth: 220 }}>
-                            <strong>Equipamento</strong>                         
+                            <strong>Equipamento</strong>
                             <div>Nome: {l.equipamento?.name ?? '-'}</div>
                             <div>Modelo: {l.equipamento?.modelo ?? '-'}</div>
                             <div>Descrição: {l.equipamento?.description ?? '-'}</div>
@@ -146,7 +231,7 @@ export default function LogsTable() {
                           </div>
                           <div style={{ flex: 1 }}>
                             <strong>Falhas</strong>
-                            
+
                             {Array.isArray(l.itens) && l.itens.length > 0 ? (
                               <ul>
                                 {l.itens.map((it) => (
