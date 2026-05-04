@@ -71,11 +71,11 @@ export default function SupTable() {
     if (!confirm('Confirma exclusão?')) return;
     try {
       await api.delete(`/equipamentos/${id}`, { headers: { Authorization: getToken() ? `Bearer ${getToken()}` : '' } });
-      toast.success('Excluído');
+      toast.success('Equipamento Excluído');
       fetchSup();
     } catch (err: any) {
       console.error('Erro ao excluir', err);
-      toast.error('Não foi possível excluir');
+      toast.error('Não foi possível excluir o equipamento');
     }
   }
 
@@ -127,12 +127,12 @@ export default function SupTable() {
     try {
       const headers = { Authorization: getToken() ? `Bearer ${getToken()}` : '' };
       await api.put(`/zonas/${payload.id}`, { zonas: payload.zonas }, { headers });
-      toast.success('Zonas salvas');
+      //toast.success('Zonas salvas');
       setZonaEditing(null);
       fetchSup();
     } catch (err: any) {
       console.error('Erro ao salvar zonas', err);
-      toast.error(err?.response?.data?.message || 'Erro ao salvar zonas');
+      //toast.error(err?.response?.data?.message || 'Erro ao salvar zonas');
       throw err;
     }
   }

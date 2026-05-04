@@ -1,62 +1,44 @@
+"use client";
+
 import styles from './style.module.scss';
 import logoImg from '../../../public/logoApel1.svg';
 import Image from 'next/image';
 import { api } from '@/services/api';
-import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { useRouter } from 'next/navigation';
+import { FormEvent } from 'react';
+import { toast } from 'sonner';
 
 export default function Page() {
 
-  async function handleLogin(formData: FormData) {
-    "use server"
+  const router = useRouter();
 
-    const email = formData.get('email');
-    const password = formData.get('password');
+  async function handleLogin(formData: FormEvent<HTMLFormElement>) {
 
-    if (email === "" || password === "") {
+    formData.preventDefault();
+
+    const formDataObj = new FormData(formData.currentTarget);
+    const email = formDataObj.get('email');
+    const password = formDataObj.get('password');
+
+    if (!email || !password) {
       return;
     }
 
     try {
-      const response = await api.post('/auth/login', {
+      const res = await api.post('/auth/login', {
         email,
         password
       });
-
-      if (!response.data.token) {
-        return;
-      }
-
-      console.log(response.data);
-
-      const expressTime = 60 * 60 * 24 *30 *1000;
-      const cookiesStore = await cookies();
-
-      // salva token de sessão
-      cookiesStore.set("session", response.data.token, {
-        maxAge: expressTime,
-        path: "/",
-        httpOnly: false,
-        secure: process.env.NODE_ENV === "production"
-      })
-
-      // salva nome de usuário para exibição no header (se disponível)
-      const nameFromResponse = response.data?.name ?? response.data?.user?.name ?? response.data?.username ?? null;
-      if (nameFromResponse) {
-        cookiesStore.set("username", String(nameFromResponse), {
-          maxAge: expressTime,
-          path: "/",
-          httpOnly: false,
-          secure: process.env.NODE_ENV === "production"
-        });
-      }
+      console.log("Login realizado com sucesso:", res.data.name);
+      toast.success(`Bem-vindo, ${res.data.name}!`);
 
     } catch (err) {
       console.log("Erro ao tentar fazer login:", err);
+      toast.error('Falha ao fazer login. Verifique suas credenciais.');
       return;
     }
-
-    redirect("/dashboard");
+    // Redirecionar para dashboard após o cookies ser setado
+    router.push('/dashboard');
   }
 
   return (
@@ -69,9 +51,10 @@ export default function Page() {
           />
 
           <section className={styles.login}>
-            <form action={handleLogin}>
+            <form onSubmit={handleLogin}>
               <label htmlFor="email" className={styles.label}>E-mail <span className={styles.required}>*</span></label>
               <input
+                id="email"
                 type="email"
                 required
                 placeholder="Digite seu e-mail..."
@@ -81,6 +64,7 @@ export default function Page() {
 
               <label htmlFor="password" className={styles.label}>Senha <span className={styles.required}>*</span></label>
               <input
+                id="password"
                 type="password"
                 required
                 placeholder="**********"

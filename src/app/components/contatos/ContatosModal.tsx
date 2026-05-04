@@ -62,7 +62,8 @@ export default function ContatosModal({ onClose, onCreate }: Props) {
 
           <label>
             Telefone
-            <input value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+            <input value={telefone} onChange={(e) => setTelefone(e.target.value)}
+            placeholder='Formato Internacional +55xx999999999'/>
           </label>
 
           <label className={styles.checkboxLabel}>

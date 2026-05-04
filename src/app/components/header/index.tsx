@@ -1,42 +1,30 @@
-'use client';
+import HeaderClient from "./HeaderClient";
+import { cookies } from "next/headers";
 
-import React from 'react';
-import styles from './style.module.scss';
-import { LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { deleteCookie } from 'cookies-next';
-import { SomAlerta } from '../somAlerta';
+export default async function Header() {
 
+  const cookieStore = await cookies();
 
-type HeaderProps = {
-  username?: string;
-};
+  const cookieHeader = cookieStore
+    .getAll()
+    .map(c => `${c.name}=${c.value}`)
+    .join('; ');
 
-export default function Header({ username = 'Usuário' }: HeaderProps) {
-  const router = useRouter();
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BACKEND_URL}/me`, {
+    method: 'GET',
+    headers: {
+      cookie: cookieHeader,
+    },
+    cache: 'no-store',
+  });
 
-  async function handleLogout() {
-    try {
-      await deleteCookie('session', { path: '/' });
-      await deleteCookie('username', { path: '/' });
-    } catch (err) {
-      // ignore
-    }
-    router.replace('/login');
-    
+  if (!response.ok) {
+    return <HeaderClient username="Usuário" />;
   }
 
-  return (
-    <header className={styles.header}>
-      <div className={styles.titleArea}>AP-SUP-WEB_v1</div>
-      <div className={styles.btSom}><SomAlerta/></div>
+  const user = await response.json();
 
-      <div className={styles.userArea}>
-        <span className={styles.username}>{username}</span>
-        <button className={styles.logoutBtn} onClick={handleLogout} aria-label="Sair">
-          <LogOut size={18} />
-        </button>
-      </div>
-    </header>
+  return (
+    <HeaderClient username={user.name} />
   );
 }
