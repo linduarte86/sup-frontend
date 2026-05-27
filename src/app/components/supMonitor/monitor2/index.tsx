@@ -69,8 +69,25 @@ export default function SupMonitor2() {
     socket.on("statusEquipamento", (data: any) => {
       const normalized = normalize(data);
       setEquipamentos((prev) => {
-        const semDuplicado = prev.filter(e => e.equipamentoId !== normalized.equipamentoId);
-        return [...semDuplicado, normalized];
+        // usa Map para garantir unicidade por equipamentoId e manter ordem
+        const map = new Map<string, any>();
+        // popula com os anteriores
+        prev.forEach(p => { map.set(String(p.equipamentoId), p); });
+        // atualiza/insere o equipamento recebido
+        map.set(String(normalized.equipamentoId), normalized);
+        // retornar array mantendo a ordem original dos prev e inserindo novos no final
+        const result: any[] = [];
+        prev.forEach(p => {
+          const key = String(p.equipamentoId);
+          const item = map.get(key);
+          if (item) {
+            result.push(item);
+            map.delete(key);
+          }
+        });
+        // adiciona quaisquer novos que sobraram
+        for (const item of map.values()) result.push(item);
+        return result;
       });
     });
 

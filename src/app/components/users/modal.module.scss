@@ -1,65 +1,195 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 200;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999; /* aumentado para garantir sobreposição ao header */
 }
 
 .modal {
-  width: 420px;
-  max-width: calc(100% - 32px);
+  width: min(760px, 94%);
+  max-width: 760px;
+  max-height: 88vh;
+  overflow: hidden;
   background: #fff;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 12px 36px rgba(0,0,0,0.18);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* evita que qualquer conteúdo dentro do modal estoure a largura
+   e causa scroll horizontal */
+.modal,
+.modal * {
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.header h3 {
+  margin: 0;
+  font-size: 1.1rem;
 }
 
 .closeBtn {
   background: transparent;
   border: none;
-  font-size: 20px;
+  font-size: 1.4rem;
+  line-height: 1;
   cursor: pointer;
 }
 
-.form label {
-  display: block;
-  margin-bottom: 10px;
-  font-size: 14px;
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+  padding-right: 6px; /* para scroll visual */
 }
 
-.form input, .form select {
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+.form input[type="text"],
+.form input[type="email"],
+.form input[type="password"],
+.form select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #dcdcdc;
+  background: #fff;
+  outline: none;
+  transition: box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.form input:focus,
+.form select:focus {
+  box-shadow: 0 0 0 3px rgba(29, 155, 240, 0.12);
+  border-color: #1d9bf0;
+}
+
+.permissions {
+  border: 1px solid #efefef;
+  padding: 10px;
+  border-radius: 10px;
+  background: #fbfbfb;
+}
+
+.permissions legend {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.permissions > div:first-of-type {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.permissions > div:first-of-type button {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #d0d0d0;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.permissions > div:first-of-type button:hover {
+  background: #f5f5f5;
+}
+
+/* Lista de permissões: empilhar itens verticalmente */
+.permissionsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.permissionItem {
+  display: flex; /* cada item é uma linha */
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #eee;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
   width: 100%;
-  padding: 10px 12px;
-  border-radius: 6px;
-  border: 1px solid #ddd;
-  margin-top: 6px;
-  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* remover regras de coluna/responsividade anteriores que pudessem conflitar */
+@media (min-width: 1000px) {
+  .permissionsGrid { column-count: unset; grid-template-columns: unset; }
+}
+
+@media (max-width: 640px) {
+  .modal {
+    width: 95%;
+    padding: 10px;
+    max-height: 92vh;
+  }
+
+  .permissionsGrid {
+    max-height: 220px;
+  }
+}
+
+@media (max-width: 1100px) {
+  /* em telas menores, posicionar o modal abaixo do header para evitar sobreposição */
+  .backdrop {
+    align-items: flex-start;
+    padding-top: 72px; /* ajuste baseado na altura do header */
+  }
+
+  .modal {
+    margin-top: 0; /* garantir espaço via padding-top do backdrop */
+  }
 }
 
 .actions {
   display: flex;
-  gap: 8px;
   justify-content: flex-end;
-  margin-top: 16px;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .actions button {
   padding: 8px 12px;
-  border-radius: 6px;
-  border: none;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
 }
 
 .actions button[type="submit"] {
-  background: var(--blue-900);
+  background: #1d9bf0;
   color: #fff;
+  border-color: #1786d6;
+}
+
+.actions button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

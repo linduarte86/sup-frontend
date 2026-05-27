@@ -6,6 +6,7 @@ import { Edit3, Trash2 } from 'lucide-react';
 import { api } from '@/services/api';
 import UserEditModal from './UserEditModal';
 import { toast } from 'sonner';
+import { hasPermission } from '@/lib/hasPermission';
 
 type User = {
   id: string | number;
@@ -22,6 +23,39 @@ export default function UsersTable({ initialUsers }: { initialUsers?: User[] }) 
   const [pageSize, setPageSize] = useState(10);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   //const router = useRouter();
+
+  // permissões e nível do usuário (obtidos do endpoint /me)
+  const [userPermissions, setUserPermissions] = useState<string[] | null>(null);
+  const [userNivel, setUserNivel] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await api.get('/me');
+        if (!mounted) return;
+        const perms = res?.data?.permissions ?? res?.data?.permittedMenus ?? null;
+        const nivel = res?.data?.nivel ?? null;
+        setUserNivel(nivel);
+        setUserPermissions(Array.isArray(perms) ? perms : null);
+      } catch (err) {
+        setUserPermissions(null);
+        setUserNivel(null);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  function permitted(permission?: string) {
+    if (!permission) return true;
+    if (userNivel === 'ADMIN') return true; // ADMIN vê tudo
+    if (userPermissions) return userPermissions.includes(permission);
+    return hasPermission(permission); // fallback
+  }
+
+  const canEdit = permitted('USERS_EDIT');
+  const canDelete = permitted('USERS_DELETE');
+  const anyAction = canEdit || canDelete;
 
   useEffect(() => {
     if (!initialUsers) fetchUsers();
@@ -55,7 +89,13 @@ export default function UsersTable({ initialUsers }: { initialUsers?: User[] }) 
 
   function handleEdit(id: string | number) {
     const u = users.find((x) => String(x.id) === String(id));
-    if (u) setEditingUser(u);
+    if (!u) return;
+    // operadores não podem editar usuários ADMIN
+    if (userNivel === 'OPERADOR' && String(u.nivel ?? '').toUpperCase() === 'ADMIN') {
+      toast.error('Permissão negada');
+      return;
+    }
+    setEditingUser(u);
   }
 
   function handleSaved(updated: User) {
@@ -63,6 +103,12 @@ export default function UsersTable({ initialUsers }: { initialUsers?: User[] }) 
   }
 
   async function handleDelete(id: string | number) {
+    // checa permissão antes de tentar deletar
+    if (!permitted('USERS_DELETE')) {
+      toast.error('Permissão negada');
+      return;
+    }
+
     if (!confirm('Confirma remoção do usuário?')) return;
     try {
       const getToken = () => {
@@ -84,14 +130,23 @@ export default function UsersTable({ initialUsers }: { initialUsers?: User[] }) 
   }
 
   const filtered = useMemo(() => {
+    // remove usuários proibidos (ex.: apel@apel.com) antes de aplicar busca
+    const arr = Array.isArray(users) ? users : [];
+    let visible = arr.filter(u => (String(u.email ?? '').toLowerCase() !== 'apel@apel.com'));
+
+    // operadores não podem ver usuários ADMIN
+    if (userNivel === 'OPERADOR') {
+      visible = visible.filter(u => String(u.nivel ?? '').toUpperCase() !== 'ADMIN');
+    }
+
     const q = query.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter((u) =>
+    if (!q) return visible;
+    return visible.filter((u) =>
       String(u.name).toLowerCase().includes(q) ||
       String(u.email ?? '').toLowerCase().includes(q) ||
       String(u.id).toLowerCase().includes(q)
     );
-  }, [users, query]);
+  }, [users, query, userNivel]);
 
   const total = filtered.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -140,13 +195,13 @@ export default function UsersTable({ initialUsers }: { initialUsers?: User[] }) 
             <th>Nome</th>
             <th>E-mail</th>
             <th>Nível</th>
-            <th style={{ width: 120 }}>Ações</th>
+            {anyAction && <th style={{ width: 120 }}>Ações</th>}
           </tr>
         </thead>
         <tbody>
           {Array.isArray(paginated) && paginated.length === 0 && !loading ? (
             <tr>
-              <td colSpan={3} className={styles.empty}>Nenhum usuário encontrado</td>
+              <td colSpan={anyAction ? 4 : 3} className={styles.empty}>Nenhum usuário encontrado</td>
             </tr>
           ) : (
             paginated.map((u) => (
@@ -154,14 +209,21 @@ export default function UsersTable({ initialUsers }: { initialUsers?: User[] }) 
                 <td>{u.name}</td>
                 <td>{u.email ?? '-'}</td>
                 <td>{u.nivel ?? '-'}</td>
-                <td>
-                  <button className={styles.iconBtn} onClick={() => handleEdit(u.id)} aria-label="Editar">
-                    <Edit3 size={16} />
-                  </button>
-                  <button className={styles.iconBtn} onClick={() => handleDelete(u.id)} aria-label="Deletar">
-                    <Trash2 size={16} />
-                  </button>
-                </td>
+                {anyAction && (
+                  <td>
+                    {canEdit && (
+                      <button className={styles.iconBtn} onClick={() => handleEdit(u.id)} aria-label="Editar">
+                        <Edit3 size={16} />
+                      </button>
+                    )}
+
+                    {canDelete && (
+                      <button className={styles.iconBtn} onClick={() => handleDelete(u.id)} aria-label="Deletar">
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </td>
+                )}
               </tr>
             ))
           )}

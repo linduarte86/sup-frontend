@@ -11,10 +11,9 @@ function getToken() {
 }
 
 // Componente para Gerar e Restaurar Backup
-export default function BackupRestory() {
+export default function Backup() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  /*
   // Função para gerar backup
   const handleGenerateBackup = async () => {
 
@@ -42,52 +41,44 @@ export default function BackupRestory() {
       toast.error('Falha ao gerar backup.');
     }
   };
+  /*
+    // Função para restaurar backup
+    const handleRestoreBackup = async (event: React.ChangeEvent<HTMLInputElement> | File | null) => {
+      let file: File | undefined;
+      if (!event) return;
+      if (event instanceof File) file = event;
+      else file = event.target.files?.[0];
+      if (!file) return;
+  
+      // confirmação antes de restaurar
+      if (!confirm('Tem certeza que deseja restaurar o backup? Esta ação é irreversível.')) return;
+  
+      const formData = new FormData();
+      formData.append('file', file);
+  
+      try {
+        await api.post('/backup/restore', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: getToken() ? `Bearer ${getToken()}` : ''
+          },
+        });
+  
+        toast.success('Backup restaurado com sucesso!');
+      } catch (error) {
+        console.error('Erro ao restaurar backup:', error);
+        toast.error('Falha ao restaurar backup.');
+      }
+    };
   */
-  // Função para restaurar backup
-  const handleRestoreBackup = async (event: React.ChangeEvent<HTMLInputElement> | File | null) => {
-    let file: File | undefined;
-    if (!event) return;
-    if (event instanceof File) file = event;
-    else file = event.target.files?.[0];
-    if (!file) return;
-
-    // confirmação antes de restaurar
-    if (!confirm('Tem certeza que deseja restaurar o backup? Esta ação é irreversível.')) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      await api.post('/backup/restore', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: getToken() ? `Bearer ${getToken()}` : ''
-        },
-      });
-
-      toast.success('Backup restaurado com sucesso!');
-    } catch (error) {
-      console.error('Erro ao restaurar backup:', error);
-      toast.error('Falha ao restaurar backup.');
-    }
-  };
-
   return (
     <div className={styles.container}>
-      <h2>Restaurar Backup</h2>
-      
-      <div className={styles.restoreBackup}>
-        <button type="button" onClick={() => fileInputRef.current?.click()} className={styles.buttonRestory}>
-          <ArchiveRestore size={20} style={{ marginRight: 8 }} /> Restaurar Backup
+      <h2>Gerar Backup</h2>
+
+      <div className={styles.gerarBackup}>
+        <button onClick={handleGenerateBackup} className={styles.buttonBackup}>
+          <DatabaseBackup size={20} style={{ marginRight: 8 }} /> Gerar Backup
         </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          id="restore-backup"
-          accept=".zip"
-          onChange={handleRestoreBackup}
-          style={{ display: 'none' }}
-        />
       </div>
     </div>
   );

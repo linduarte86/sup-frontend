@@ -6,6 +6,7 @@ import { Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '@/services/api';
 import { toast } from 'sonner';
 import { jsPDF } from 'jspdf';
+import { hasPermission } from '@/lib/hasPermission';
 
 function getToken() {
   return document.cookie.split('; ').find(row => row.startsWith('session='))?.split('=')[1];
@@ -16,7 +17,7 @@ type Log = {
   descricao?: string; // usado pelo backend
   message?: string;
   created_at?: string;
-  equipamento?: { id?: string; name?: string;[key: string]: any };
+  equipamento?: { id?: string; name?: string; description?: string; [key: string]: any };
   itens?: Array<{ id?: string; descricao?: string; tipo?: string; indice?: number; zona?: any }>;
   [key: string]: any;
 };
@@ -25,12 +26,39 @@ export default function LogsTable() {
   const [items, setItems] = useState<Log[]>([]);
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
+  const [userPermissions, setUserPermissions] = useState<string[] | null>(null);
+  const [userNivel, setUserNivel] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => { fetchLogs(); }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await api.get('/me');
+        if (!mounted) return;
+        const perms = res?.data?.permissions ?? res?.data?.permittedMenus ?? null;
+        const nivel = res?.data?.nivel ?? null;
+        setUserNivel(nivel);
+        setUserPermissions(Array.isArray(perms) ? perms : null);
+      } catch (err) {
+        setUserPermissions(null);
+        setUserNivel(null);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  function permitted(permission?: string) {
+    if (!permission) return true;
+    if (userNivel === 'ADMIN') return true;
+    if (userPermissions) return userPermissions.includes(permission);
+    return hasPermission(permission);
+  }
 
   function toggleExpand(id?: string | number) {
     if (id == null) return;
@@ -65,8 +93,11 @@ export default function LogsTable() {
     doc.setFontSize(11);
 
     selected.forEach((l, idx) => {
+      const descricao = `Supervisão: ${l.equipamento?.description ?? l.message ?? '-'}`;
       const header = `${idx + 1}. ${l.descricao ?? l.message ?? '-'} (${l.equipamento?.name ?? '-'})`;
       const created = `Data: ${l.created_at ?? l.timestamp ?? '-'} `;
+      doc.text(descricao, 14, y);
+      y += 6;
       doc.text(header, 14, y);
       y += 6;
       doc.text(created, 14, y);
@@ -100,6 +131,11 @@ export default function LogsTable() {
   }
 
   async function handleDelete(id?: string | number) {
+    if (!permitted('LOGS_DELETE')) {
+      toast.error('Permissão negada');
+      return;
+    }
+
     if (!confirm('Confirma exclusão do log?')) return;
     try {
       await api.delete(`/logs/${id}`, { headers: { Authorization: getToken() ? `Bearer ${getToken()}` : '' } });
@@ -112,6 +148,11 @@ export default function LogsTable() {
   }
 
   async function handleDeleteAll() {
+    if (!permitted('LOGS_DELETE')) {
+      toast.error('Permissão negada');
+      return;
+    }
+
     if (!confirm('Confirma exclusão de TODOS os logs? Esta ação não pode ser desfeita.')) return;
     try {
       setLoading(true);
@@ -175,9 +216,11 @@ export default function LogsTable() {
           </select>
         </div>
 
-        <button type="button" title="Excluir todos os logs" onClick={handleDeleteAll} className={styles.btnDeleteAll}>
-          <Trash2 />
-        </button>
+        {permitted('LOGS_DELETE') && (
+          <button type="button" title="Excluir todos os logs" onClick={handleDeleteAll} className={styles.btnDeleteAll}>
+            <Trash2 />
+          </button>
+        )}
       </div>
 
       <table className={styles.table}>
@@ -212,7 +255,9 @@ export default function LogsTable() {
                       <button className={styles.iconBtn} onClick={() => toggleExpand(l.id)} aria-label="Detalhes">
                         {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
-                      <button className={styles.iconBtn} onClick={() => handleDelete(l.id)} aria-label="Deletar"><Trash2 size={16} /></button>
+                      {permitted('LOGS_DELETE') && (
+                        <button className={styles.iconBtn} onClick={() => handleDelete(l.id)} aria-label="Deletar"><Trash2 size={16} /></button>
+                      )}
                     </td>
                   </tr>
 

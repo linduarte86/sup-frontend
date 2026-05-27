@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './modal.module.scss';
 import { toast } from 'sonner';
 
@@ -9,6 +9,8 @@ type UserData = {
   email: string;
   password: string;
   nivel: 'OPERADOR' | 'ADMIN';
+  permittedMenus?: string[];
+  permissions?: string[]; // adicionado para compatibilidade com backend
 };
 
 type Props = {
@@ -16,18 +18,72 @@ type Props = {
   onCreate: (data: UserData) => Promise<void> | void;
 };
 
+const ALL_PERMISSIONS = [
+  { key: 'DASHBOARD_VIEW', description: 'Ver dashboard' },
+  { key: 'MONITORAMENTO_VIEW', description: 'Ver monitoramento' },
+  { key: 'CONFIG_VIEW', description: 'Ver configurações' },
+  { key: 'SUPERVISAO_VIEW', description: 'Ver supervisão' },
+  { key: 'SUPERVISAO_CREATE', description: 'Criar supervisão' },
+  { key: 'SUPERVISAO_EDIT', description: 'Editar supervisão' },
+  { key: 'SUPERVISAO_DELETE', description: 'Excluir supervisão' },
+  { key: 'SUPERVISAO_EDIT_ZONAS', description: 'Editar zonas supervisão' },
+  { key: 'USERS_VIEW', description: 'Ver usuários' },
+  { key: 'USERS_CREATE', description: 'Criar usuários' },
+  { key: 'USERS_EDIT', description: 'Editar usuários' },
+  { key: 'USERS_DELETE', description: 'Excluir usuários' },
+  { key: 'CONTATOS_VIEW', description: 'Ver contatos' },
+  { key: 'CONTATOS_CREATE', description: 'Criar contatos' },
+  { key: 'CONTATOS_EDIT', description: 'Editar contatos' },
+  { key: 'CONTATOS_DELETE', description: 'Excluir contatos' },
+  { key: 'TIMER_VIEW', description: 'Ver timer' },
+  { key: 'BACKUP_VIEW', description: 'Ver backup' },
+  { key: 'BACKUP_RESTORE', description: 'Restaurar backup' },
+  { key: 'LOGS_VIEW', description: 'Ver logs' },
+  { key: 'LOGS_DELETE', description: 'Excluir logs' },
+];
+
 export default function UserModal({ onClose, onCreate }: Props) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nivel, setNivel] = useState<'OPERADOR' | 'ADMIN'>('OPERADOR');
   const [submitting, setSubmitting] = useState(false);
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    // initialize selected map
+    const init: Record<string, boolean> = {};
+    ALL_PERMISSIONS.forEach(p => {
+      init[p.key] = false;
+    });
+    setSelected(init);
+  }, []);
+
+  function togglePermission(key: string) {
+    setSelected(prev => ({ ...prev, [key]: !prev[key] }));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await onCreate({ name, email, password, nivel });
+      const permissions = nivel === 'OPERADOR'
+        ? Object.keys(selected).filter(k => selected[k])
+        : undefined;
+
+      const payload: UserData = {
+        name,
+        email,
+        password,
+        nivel,
+      };
+
+      if (permissions) {
+        payload.permissions = permissions;
+        payload.permittedMenus = permissions; // alias para compatibilidade
+      }
+
+      await onCreate(payload);
       toast.success('Usuário criado com sucesso');
       onClose();
     } catch (err: any) {
@@ -50,7 +106,13 @@ export default function UserModal({ onClose, onCreate }: Props) {
         <form onSubmit={handleSubmit} className={styles.form}>
           <label>
             Nome
-            <input value={name} onChange={(e) => setName(e.target.value)} required />
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Digite o nome completo"
+              required
+            />
           </label>
 
           <label>
@@ -70,6 +132,27 @@ export default function UserModal({ onClose, onCreate }: Props) {
               <option value="ADMIN">ADMIN</option>
             </select>
           </label>
+
+          {nivel === 'OPERADOR' && (
+            <fieldset className={styles.permissions}>
+              <legend>Permissões (marque as permitidas)</legend>
+              <div className={styles.permissionsGrid}>
+                {ALL_PERMISSIONS.map(p => (
+                  <label key={p.key} className={styles.permissionItem}>
+                    <input
+                      type="checkbox"
+                      checked={!!selected[p.key]}
+                      onChange={() => togglePermission(p.key)}
+                    />
+                    <div className={styles.permissionText}>
+                      
+                      <small className={styles.permissionDesc}>{p.description}</small>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )}
 
           <div className={styles.actions}>
             <button type="button" onClick={onClose}>Cancelar</button>

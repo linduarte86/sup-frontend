@@ -8,6 +8,7 @@ import SupModal from './SupModal';
 import SupEditModal from './SupEditModal';
 import SupZonaEditModal from './SupZonaEditModal';
 import { toast } from 'sonner';
+import { hasPermission } from '@/lib/hasPermission';
 
 type Sup = {
   id?: string | number;
@@ -34,6 +35,10 @@ export default function SupTable() {
   const [openModal, setOpenModal] = useState(false);
   const [editing, setEditing] = useState<Sup | null>(null);
   const [zonaEditing, setZonaEditing] = useState<Sup | null>(null);
+
+  // permissões do usuário (obtidas do endpoint /me) e nível
+  const [userPermissions, setUserPermissions] = useState<string[] | null>(null);
+  const [userNivel, setUserNivel] = useState<string | null>(null);
 
   useEffect(() => { fetchSup(); }, []);
 
@@ -151,6 +156,30 @@ export default function SupTable() {
 
   const paginated = useMemo(() => { const start = (page - 1) * pageSize; return filtered.slice(start, start + pageSize); }, [filtered, page, pageSize]);
 
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await api.get('/me');
+        if (!mounted) return;
+        setUserNivel(res?.data?.nivel ?? null);
+        const perms = res?.data?.permissions ?? res?.data?.permittedMenus ?? null;
+        setUserPermissions(Array.isArray(perms) ? perms : null);
+      } catch (err) {
+        setUserPermissions(null);
+        setUserNivel(null);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  function permitted(permission?: string) {
+    if (!permission) return true;
+    if (userNivel === 'ADMIN') return true; // ADMIN vê tudo
+    if (userPermissions) return userPermissions.includes(permission);
+    return hasPermission(permission); // fallback
+  }
+
   return (
     <div className={styles.tableWrap}>
       <div className={styles.headerRow}>
@@ -194,9 +223,17 @@ export default function SupTable() {
                 <td>{s.ip ?? '-'}</td>
                 <td>{s.port}</td>
                 <td>
-                  <button className={styles.iconBtn} onClick={() => setEditZona(s)} aria-label="Editar"><LayoutGrid size={16} /></button>
-                  <button className={styles.iconBtn} onClick={() => setEditing(s)} aria-label="Editar"><Edit3 size={16} /></button>
-                  <button className={styles.iconBtn} onClick={() => handleDelete(s.id)} aria-label="Deletar"><Trash2 size={16} /></button>
+                  {permitted('SUPERVISAO_EDIT_ZONAS') && (
+                    <button className={styles.iconBtn} onClick={() => setEditZona(s)} aria-label="Editar Zonas"><LayoutGrid size={16} /></button>
+                  )}
+
+                  {permitted('SUPERVISAO_EDIT') && (
+                    <button className={styles.iconBtn} onClick={() => setEditing(s)} aria-label="Editar"><Edit3 size={16} /></button>
+                  )}
+
+                  {permitted('SUPERVISAO_DELETE') && (
+                    <button className={styles.iconBtn} onClick={() => handleDelete(s.id)} aria-label="Deletar"><Trash2 size={16} /></button>
+                  )}
                 </td>
               </tr>
             ))
