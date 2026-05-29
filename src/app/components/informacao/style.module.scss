@@ -1,0 +1,153 @@
+/* variáveis locais do componente (definidas no container para serem usadas internamente) */
+.container {
+  --bg: #ffffff;
+  --muted: #6b7280;
+  --border: #e6e6e6;
+  --accent: #0b5fff;
+  --danger: #dc2626;
+  --radius: 6px;
+
+  padding: 20px;
+  background: var(--bg);
+  min-height: calc(100vh - 48px);
+}
+
+.titulo{
+  height: 50px;
+  width: auto;
+  background-color: white;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.titulo h1{
+  font-size: 24px;
+  font-weight: 600;
+  color: #202222;
+  padding: 10px 0 0 10px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.02);
+}
+
+.card h2 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.form {
+  background: #fff;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-width: 1000px;
+}
+
+.field {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #111827;
+  font-size: 13px;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  color: #111827;
+  background: #fff;
+  outline: none;
+}
+
+.input:focus,
+.textarea:focus {
+  box-shadow: 0 0 0 3px rgba(11,95,255,0.08);
+  border-color: var(--accent);
+}
+
+.fileInput {
+  display: block;
+  width: 100%;
+}
+
+.preview {
+  margin-top: 8px;
+}
+
+.preview img {
+  border-radius: 4px;
+  max-width: 160px;
+  max-height: 80px;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+
+.btnSecondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #111827;
+}
+
+.btnSecondary:hover {
+  background: #fafafa;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.primary {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.primary[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .form {
+    padding: 12px;
+  }
+  .preview img { max-width: 120px; max-height: 60px; }
+}

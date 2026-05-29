@@ -64,6 +64,12 @@ const menus = [
         Icon: Database,
         permission: 'BACKUP_VIEW', //permissão para ver este submenu
       },
+      { 
+        href: '/configuracao/informacao',
+        label: 'Informações',
+        Icon: FileText,
+        permission: 'INFORMACAO_VIEW' //permissão para ver este submenu
+      },
     ],
   },
 

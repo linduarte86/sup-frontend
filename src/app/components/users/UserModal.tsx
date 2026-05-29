@@ -38,6 +38,7 @@ const ALL_PERMISSIONS = [
   { key: 'TIMER_VIEW', description: 'Ver timer' },
   { key: 'BACKUP_VIEW', description: 'Ver backup' },
   { key: 'BACKUP_RESTORE', description: 'Restaurar backup' },
+  { key: 'INFORMACAO_VIEW', description: 'Ver informações' },
   { key: 'LOGS_VIEW', description: 'Ver logs' },
   { key: 'LOGS_DELETE', description: 'Excluir logs' },
 ];

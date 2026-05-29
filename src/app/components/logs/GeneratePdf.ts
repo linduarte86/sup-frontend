@@ -108,8 +108,21 @@ export async function generatePdf(selected: any[], systemConfig?: any | null) {
   let y = 12;
 
   try {
-    let headerX = 14;
-    let headerY = y;
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    // borda externa
+    doc.setLineWidth(0.6);
+    doc.rect(8, 8, pageW - 16, pageH - 16);
+
+    // título central e data/hora à direita
+    doc.setFontSize(16);
+    doc.text('Relatório de Logs', pageW / 2, 18, { align: 'center' } as any);
+    const dataGeracao = new Date().toLocaleString('pt-BR');
+    doc.setFontSize(9);
+    doc.text(dataGeracao, pageW - 12, 18, { align: 'right' } as any);
+
+    let headerX = 14; // posição inicial do texto, ajustada para considerar logo se existir
+    let headerY = 20; // espaço abaixo do título (ajustado menor)
     let headerHeight = 0;
 
     if (config) {
@@ -117,6 +130,23 @@ export async function generatePdf(selected: any[], systemConfig?: any | null) {
       const contact = `${config.email ?? ''}${config.email ? ' | ' : ''}${config.telefone ?? ''}`.trim();
       const addr = String(config.endereco ?? '');
 
+      // calcula alturas do bloco de texto e do logo
+      const splitAddr = addr ? doc.splitTextToSize(addr, 140) : [];
+      const textBlockHeight = addr ? (splitAddr.length * 6) + 20 : 20;
+      const imgW = 36; const imgH = 36;
+      const blockHeight = Math.max(imgH, textBlockHeight);
+
+      // topo do bloco do cabeçalho
+      const headerTop = headerY;
+
+      // posições para centralizar verticalmente dentro do bloco
+      const imageY = headerTop + (blockHeight - imgH) / 2;
+      const textTop = headerTop + (blockHeight - textBlockHeight) / 2;
+      const titleY = textTop + 6;
+      const contactY = textTop + 14;
+      const addrY = textTop + 20;
+
+      // desenha logo, se existir
       if (config.logoUrl) {
         const proxied = `/api/logo?p=${encodeURIComponent(config.logoUrl)}&t=${Date.now()}`;
         console.log('GeneratePdf - proxied logo path:', proxied);
@@ -124,16 +154,14 @@ export async function generatePdf(selected: any[], systemConfig?: any | null) {
         console.log('GeneratePdf - dataUrl present:', !!dataUrl);
         if (dataUrl) {
           try {
-            const imgW = 36;
-            const imgH = 36;
             let fmt: any = 'PNG';
             if (typeof dataUrl === 'string' && dataUrl.startsWith('data:image/jpeg')) fmt = 'JPEG';
             else if (typeof dataUrl === 'string' && dataUrl.startsWith('data:image/png')) fmt = 'PNG';
             try {
-              doc.addImage(dataUrl as string, fmt, 14, headerY - 4, imgW, imgH);
+              doc.addImage(dataUrl as string, fmt, 14, imageY, imgW, imgH);
             } catch (e) {
               console.error('addImage failed with format', fmt, e);
-              try { (doc as any).addImage(dataUrl, 14, headerY - 4, imgW, imgH); } catch (er) { console.error('fallback addImage failed', er); }
+              try { (doc as any).addImage(dataUrl, 14, imageY, imgW, imgH); } catch (er) { console.error('fallback addImage failed', er); }
             }
             headerX = 14 + imgW + 8;
             headerHeight = imgH;
@@ -143,20 +171,28 @@ export async function generatePdf(selected: any[], systemConfig?: any | null) {
         }
       }
 
+      // desenha textos alinhados verticalmente ao centro do bloco
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(12);
-      doc.text(String(config.empresaName ?? 'Logs selecionados'), headerX, headerY + 6);
+      doc.text(String(config.empresaName ?? 'Logs selecionados'), headerX, titleY);
       doc.setFontSize(9);
-      if (contact) doc.text(contact, headerX, headerY + 14);
+      if (contact) doc.text(contact, headerX, contactY);
       if (addr) {
-        const splitAddr = doc.splitTextToSize(addr, 140);
-        doc.text(splitAddr, headerX, headerY + 20);
-        headerHeight = Math.max(headerHeight, (splitAddr.length * 6) + 20);
+        doc.text(splitAddr, headerX, addrY);
+        headerHeight = Math.max(headerHeight, textBlockHeight);
       } else {
         headerHeight = Math.max(headerHeight, 20);
       }
 
-      y += Math.max(headerHeight + 6, 36);
+      // calcula bottom real do texto e da imagem e posiciona o separador abaixo
+      const addrLines = splitAddr.length || 0;
+      const addrBottom = addrY + Math.max(0, addrLines - 1) * 6 + 2; // pequeno offset
+      const imageBottom = imageY + imgH;
+      const separatorY = Math.max(headerTop + blockHeight, addrBottom, imageBottom) + 12; // padding extra
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(0,0,0);
+      doc.line(12, separatorY, pageW - 12, separatorY);
+      y = separatorY + 10;
     } else {
       doc.setFontSize(14);
       doc.text('Logs selecionados', 14, y);
