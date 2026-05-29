@@ -5,7 +5,6 @@ import styles from './style.module.scss';
 import { Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '@/services/api';
 import { toast } from 'sonner';
-import { jsPDF } from 'jspdf';
 import { hasPermission } from '@/lib/hasPermission';
 
 function getToken() {
@@ -28,6 +27,7 @@ export default function LogsTable() {
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
   const [userPermissions, setUserPermissions] = useState<string[] | null>(null);
   const [userNivel, setUserNivel] = useState<string | null>(null);
+  const [systemConfig, setSystemConfig] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -48,6 +48,15 @@ export default function LogsTable() {
       } catch (err) {
         setUserPermissions(null);
         setUserNivel(null);
+      }
+
+      // busca config do sistema (logo, etc)
+      try {
+        const r = await api.get('/system-config');
+        if (!mounted) return;
+        setSystemConfig(r?.data ?? null);
+      } catch (e) {
+        // ignore
       }
     })();
     return () => { mounted = false; };
@@ -79,43 +88,6 @@ export default function LogsTable() {
       ids.forEach(id => { copy[id] = selectAll; });
       return copy;
     });
-  }
-
-  async function generatePdf() {
-    const selected = items.filter(i => selectedIds[String(i.id)]);
-    if (!selected || selected.length === 0) return toast.error('Nenhum log selecionado');
-
-    const doc = new jsPDF();
-    let y = 12;
-    doc.setFontSize(14);
-    doc.text('Logs selecionados', 14, y);
-    y += 8;
-    doc.setFontSize(11);
-
-    selected.forEach((l, idx) => {
-      const descricao = `Supervisão: ${l.equipamento?.description ?? l.message ?? '-'}`;
-      const header = `${idx + 1}. ${l.descricao ?? l.message ?? '-'} (${l.equipamento?.name ?? '-'})`;
-      const created = `Data: ${l.created_at ?? l.timestamp ?? '-'} `;
-      doc.text(descricao, 14, y);
-      y += 6;
-      doc.text(header, 14, y);
-      y += 6;
-      doc.text(created, 14, y);
-      y += 6;
-      if (Array.isArray(l.itens) && l.itens.length > 0) {
-        l.itens.forEach(it => {
-          const line = `- ${it.tipo ?? ''}: ${it.descricao ?? ''} (Zona: ${it.zona?.name ?? '-'})`;
-          const split = doc.splitTextToSize(line, 180);
-          doc.text(split, 16, y);
-          y += (split.length * 6);
-          if (y > 280) { doc.addPage(); y = 12; }
-        });
-      }
-      y += 6;
-      if (y > 280) { doc.addPage(); y = 12; }
-    });
-
-    doc.save('logs.pdf');
   }
 
   async function fetchLogs() {
@@ -166,6 +138,26 @@ export default function LogsTable() {
     } finally { setLoading(false); }
   }
 
+  // gera PDF usando módulo separado
+  async function handleGeneratePdf() {
+    const selected = items.filter(i => selectedIds[String(i.id)]);
+    if (!selected || selected.length === 0) return toast.error('Nenhum log selecionado');
+
+    try {
+      const mod = await import('./GeneratePdf');
+      const pdfFn = (mod && typeof (mod as any).generatePdf === 'function') ? (mod as any).generatePdf : ((mod && typeof (mod as any).default === 'function') ? (mod as any).default : null);
+      if (!pdfFn) {
+        console.error('Função generatePdf não encontrada no módulo', mod);
+        toast.error('Erro: função de geração de PDF não disponível');
+        return;
+      }
+      await pdfFn(selected, systemConfig ?? null);
+    } catch (err: any) {
+      console.error('Erro ao gerar PDF:', err);
+      toast.error(err?.message || String(err) || 'Erro ao gerar PDF');
+    }
+  }
+
   const filtered = useMemo(() => {
     const arr = Array.isArray(items) ? items : [];
     const q = String(query ?? '').trim().toLowerCase();
@@ -203,7 +195,7 @@ export default function LogsTable() {
             />
             Selecionar todos
           </label>
-          <button type="button" onClick={generatePdf} className={styles.btnPDF}>Gerar PDF</button>
+          <button type="button" onClick={handleGeneratePdf} className={styles.btnPDF}>Gerar PDF</button>
 
         </div>
         <input placeholder="Buscar por data" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} className={styles.searchInput} />
