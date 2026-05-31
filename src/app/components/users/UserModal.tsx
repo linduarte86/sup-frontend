@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from './modal.module.scss';
 import { toast } from 'sonner';
+import { api } from '@/services/api';
 
 type UserData = {
   name: string;
@@ -50,6 +51,7 @@ export default function UserModal({ onClose, onCreate }: Props) {
   const [nivel, setNivel] = useState<'OPERADOR' | 'ADMIN'>('OPERADOR');
   const [submitting, setSubmitting] = useState(false);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [currentUserNivel, setCurrentUserNivel] = useState<'OPERADOR' | 'ADMIN' | null>(null);
 
   useEffect(() => {
     // initialize selected map
@@ -60,6 +62,22 @@ export default function UserModal({ onClose, onCreate }: Props) {
     setSelected(init);
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await api.get('/me');
+        if (!mounted) return;
+        const n = res?.data?.nivel ?? null;
+        setCurrentUserNivel(n);
+        if (n === 'OPERADOR') setNivel('OPERADOR');
+      } catch (e) {
+        setCurrentUserNivel(null);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
   function togglePermission(key: string) {
     setSelected(prev => ({ ...prev, [key]: !prev[key] }));
   }
@@ -68,7 +86,8 @@ export default function UserModal({ onClose, onCreate }: Props) {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const permissions = nivel === 'OPERADOR'
+      const effectiveNivel = currentUserNivel === 'OPERADOR' ? 'OPERADOR' : nivel;
+      const permissions = effectiveNivel === 'OPERADOR'
         ? Object.keys(selected).filter(k => selected[k])
         : undefined;
 
@@ -76,7 +95,7 @@ export default function UserModal({ onClose, onCreate }: Props) {
         name,
         email,
         password,
-        nivel,
+        nivel: effectiveNivel,
       };
 
       if (permissions) {
@@ -128,7 +147,12 @@ export default function UserModal({ onClose, onCreate }: Props) {
 
           <label>
             Nível
-            <select value={nivel} onChange={(e) => setNivel(e.target.value as any)}>
+            <select
+              value={nivel}
+              onChange={(e) => setNivel(e.target.value as any)}
+              disabled={currentUserNivel === 'OPERADOR'}
+              title={currentUserNivel === 'OPERADOR' ? 'Operador não pode criar/definir admins' : ''}
+            >
               <option value="OPERADOR">OPERADOR</option>
               <option value="ADMIN">ADMIN</option>
             </select>

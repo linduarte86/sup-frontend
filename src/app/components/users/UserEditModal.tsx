@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './modal.module.scss';
 import { api } from '@/services/api';
 import { toast } from 'sonner';
@@ -26,6 +26,23 @@ export default function UserEditModal({ user, onClose, onSaved }: Props) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [currentUserNivel, setCurrentUserNivel] = useState<'OPERADOR' | 'ADMIN' | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await api.get('/me');
+        if (!mounted) return;
+        const n = res?.data?.nivel ?? null;
+        setCurrentUserNivel(n);
+        if (n === 'OPERADOR') setNivel('OPERADOR');
+      } catch (e) {
+        setCurrentUserNivel(null);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,10 +65,11 @@ export default function UserEditModal({ user, onClose, onSaved }: Props) {
     setSubmitting(true);
     try {
       const token = document.cookie.split('; ').find((r) => r.startsWith('session='))?.split('=')[1];
+      const effectiveNivel = currentUserNivel === 'OPERADOR' ? 'OPERADOR' : String(nivel ?? 'OPERADOR');
       const payload: any = {
         name: String(name ?? ''),
         email: String(email ?? ''),
-        nivel: String(nivel ?? 'OPERADOR'),
+        nivel: effectiveNivel,
         ...(oldPassword ? { oldPassword: String(oldPassword) } : {}),
         ...(newPassword ? { newPassword: String(newPassword) } : {}),
         ...(confirmPassword ? { confirmPassword: String(confirmPassword) } : {}),
@@ -102,7 +120,12 @@ export default function UserEditModal({ user, onClose, onSaved }: Props) {
 
           <label>
             Nível
-            <select value={nivel} onChange={(e) => setNivel(e.target.value)}>
+            <select
+              value={nivel}
+              onChange={(e) => setNivel(e.target.value)}
+              disabled={currentUserNivel === 'OPERADOR'}
+              title={currentUserNivel === 'OPERADOR' ? 'Operador não pode promover para ADMIN' : ''}
+            >
               <option value="OPERADOR">OPERADOR</option>
               <option value="ADMIN">ADMIN</option>
             </select>

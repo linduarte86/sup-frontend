@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Monitor, Settings, FileText, ChevronDown, User, Phone, Clock, Database, Menu, X } from 'lucide-react';
+import { Home, Monitor, Settings, FileText, ChevronDown, User, Phone, Clock, Database, Menu, X, Building2 } from 'lucide-react';
 import Image from 'next/image';
 import styles from './style.module.scss';
 import { hasPermission } from '@/lib/hasPermission';
@@ -31,40 +31,41 @@ const menus = [
     permission: 'CONFIG_VIEW', //permissão para ver este menu
 
     children: [
-      { 
-        href: '/configuracao/supervisao', 
-        label: 'Supervisão', 
+      {
+        href: '/configuracao/supervisao',
+        label: 'Supervisão',
         Icon: Monitor,
         permission: 'SUPERVISAO_VIEW', //permissão para ver este submenu
       },
 
-      { href: '/configuracao/usuario', 
-        label: 'Usuário', 
+      {
+        href: '/configuracao/usuario',
+        label: 'Usuário',
         Icon: User,
         permission: 'USERS_VIEW', //permissão para ver este submenu
       },
 
-      { 
+      {
         href: '/configuracao/contatos',
-        label: 'Contatos', 
+        label: 'Contatos',
         Icon: Phone,
         permission: 'CONTATOS_VIEW', //permissão para ver este submenu
       },
 
-      { 
+      {
         href: '/configuracao/timer',
-        label: 'Timer', 
+        label: 'Timer',
         Icon: Clock,
         permission: 'TIMER_VIEW', //permissão para ver este submenu
       },
 
-      { 
-        href: '/configuracao/backup', 
-        label: 'Backup', 
+      {
+        href: '/configuracao/backup',
+        label: 'Backup',
         Icon: Database,
         permission: 'BACKUP_VIEW', //permissão para ver este submenu
       },
-      { 
+      {
         href: '/configuracao/informacao',
         label: 'Informações',
         Icon: FileText,
@@ -72,12 +73,17 @@ const menus = [
       },
     ],
   },
-
-  { 
-    href: '/logs', 
-    label: 'Logs', 
+  {
+    href: '/logs',
+    label: 'Logs',
     Icon: FileText,
     permission: 'LOGS_VIEW', //permissão para ver este menu
+  },
+  {
+    href: '/apel',
+    label: 'Apel',
+    Icon: Building2,
+    //permission: permissão para ver este menu é desnecessário.
   },
 ];
 
@@ -173,7 +179,7 @@ export default function Sidebar({ className }: SidebarProps) {
 
         <nav className={styles.nav} aria-label="Navegação principal">
           <ul className={styles.list}>
-                {/*
+            {/*
               Filtra menus: mostra o item se
                 - não houver permission definido, ou
                 - usuário tem permission do próprio item, ou
@@ -260,21 +266,21 @@ export default function Sidebar({ className }: SidebarProps) {
                   );
                 }
 
-              // item normal
-              return (
-                <li key={m.href} className={styles.item}>
-                  <Link
-                    href={m.href}
-                    className={`${styles.link} ${isActive ? styles.active : ''}`}
-                    aria-current={isActive ? 'page' : undefined}
-                    onClick={closeMobile}
-                  >
-                    {Icon ? <Icon className={styles.icon} size={18} aria-hidden="true" /> : null}
-                    <span className={styles.label}>{m.label}</span>
-                  </Link>
-                </li>
-              );
-            })}
+                // item normal
+                return (
+                  <li key={m.href} className={styles.item}>
+                    <Link
+                      href={m.href}
+                      className={`${styles.link} ${isActive ? styles.active : ''}`}
+                      aria-current={isActive ? 'page' : undefined}
+                      onClick={closeMobile}
+                    >
+                      {Icon ? <Icon className={styles.icon} size={18} aria-hidden="true" /> : null}
+                      <span className={styles.label}>{m.label}</span>
+                    </Link>
+                  </li>
+                );
+              })}
           </ul>
         </nav>
       </aside>
