@@ -6,7 +6,7 @@ import styles from './layout.module.scss';
 import { Footer } from '../components/footer';
 
 export const metadata = {
-  title: 'APEL-SUP-WEB',
+  title: 'AP-SUP-WEB',
 };
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {

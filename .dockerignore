@@ -1,0 +1,15 @@
+# Ignore files
+node_modules
+.next
+
+# build
+dist
+
+# git
+.git
+
+# env
+.env
+
+Dockerfile
+

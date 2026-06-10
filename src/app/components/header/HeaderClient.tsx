@@ -29,7 +29,7 @@ export default function HeaderClient({ username }: HeaderProps) {
 
   return (
     <header className={styles.header}>
-      <div className={styles.titleArea}>AP-SUP-WEB_v1</div>
+      <div className={styles.titleArea}>AP-SUPWEB_v1.0</div>
       <div className={styles.btSom}><SomAlerta/></div>
 
       <div className={styles.userArea}>
