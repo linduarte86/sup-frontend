@@ -1,5 +1,10 @@
-import { io } from 'socket.io-client';
+"use client";
 
-const socket = io(process.env.NEXT_PUBLIC_API_BACKEND_URL!,); // Altere para o seu backend
+import { io } from 'socket.io-client';
+import { env } from "next-runtime-env";
+
+const socket = io(env("NEXT_PUBLIC_SOCKET_URL")!, {
+  transports: ['websocket'],
+}); // Altere para o seu backend
 
 export default socket;

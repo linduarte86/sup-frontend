@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from './modal.module.scss';
 import { toast } from 'sonner';
-import { api } from '@/services/api';
+import { api } from '@/services/apiClient';
 
 type UserData = {
   name: string;

@@ -5,6 +5,7 @@ import styles from './style.module.scss';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { SomAlerta } from '../somAlerta';
+import { api } from '@/services/apiClient';
 
 
 type HeaderProps = {
@@ -16,21 +17,20 @@ export default function HeaderClient({ username }: HeaderProps) {
 
   async function handleLogout() {
     try {
-       await fetch(`${process.env.NEXT_PUBLIC_API_BACKEND_URL}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
+      await api.post('/auth/logout', {}, {
+        withCredentials: true,
       });
     } catch (err) {
-       console.error('Erro ao fazer logout', err);
+      console.error('Erro ao fazer logout', err);
     }
     router.replace('/login');
-    
+
   }
 
   return (
     <header className={styles.header}>
       <div className={styles.titleArea}>AP-SUPWEB_v1.0</div>
-      <div className={styles.btSom}><SomAlerta/></div>
+      <div className={styles.btSom}><SomAlerta /></div>
 
       <div className={styles.userArea}>
         <span className={styles.username}>{username}</span>

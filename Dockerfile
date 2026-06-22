@@ -6,6 +6,7 @@ FROM node:20-alpine AS deps
 WORKDIR /sup-frontend
 
 COPY package.json package-lock.json ./
+
 RUN npm ci
 
 
@@ -17,10 +18,8 @@ FROM node:20-alpine AS builder
 WORKDIR /sup-frontend
 
 COPY --from=deps /sup-frontend/node_modules ./node_modules
-COPY . .
 
-ARG NEXT_PUBLIC_API_BACKEND_URL
-ENV NEXT_PUBLIC_API_BACKEND_URL=$NEXT_PUBLIC_API_BACKEND_URL
+COPY . .
 
 RUN npm run build
 
@@ -34,15 +33,12 @@ WORKDIR /sup-frontend
 
 ENV NODE_ENV=production
 
-# instala só dependências de produção
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+COPY --from=builder /sup-frontend/.next/standalone ./
 
-# copia build do Next
-COPY --from=builder /sup-frontend/.next ./.next
+COPY --from=builder /sup-frontend/.next/static ./.next/static
+
 COPY --from=builder /sup-frontend/public ./public
-COPY --from=builder /sup-frontend/next.config.* ./
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+CMD ["node", "server.js"]

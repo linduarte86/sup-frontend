@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import styles from './style.module.scss';
 import { Trash2, ChevronDown, ChevronUp } from 'lucide-react';
-import { api } from '@/services/api';
+import { api } from '@/services/apiClient';
 import { toast } from 'sonner';
 import { hasPermission } from '@/lib/hasPermission';
 

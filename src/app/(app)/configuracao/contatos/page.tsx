@@ -5,7 +5,7 @@ import styles from './style.module.scss';
 import { BtCadastrar } from '@/app/components/button/btCadastrar';
 import ContatosTable from '@/app/components/contatos/ContatosTable';
 import { hasPermission } from '@/lib/hasPermission';
-import { api } from '@/services/api';
+import { api } from '@/services/apiClient';
 
 export default function Contatos() {
   const [canCreate, setCanCreate] = useState<boolean | null>(null);

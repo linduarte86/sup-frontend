@@ -5,7 +5,7 @@ import styles from './style.module.scss';
 import UserModal from '@/app/components/users/UserModal';
 import ContatosModal from '@/app/components/contatos/ContatosModal';
 import SupModal from '@/app/components/supervisao/SupModal';
-import { api } from '@/services/api';
+import { api } from '@/services/apiClient';
 
 interface ModalProps {
   onClose: () => void;

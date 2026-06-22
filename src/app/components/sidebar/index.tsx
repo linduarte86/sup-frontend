@@ -7,7 +7,7 @@ import { Home, Monitor, Settings, FileText, ChevronDown, User, Phone, Clock, Dat
 import Image from 'next/image';
 import styles from './style.module.scss';
 import { hasPermission } from '@/lib/hasPermission';
-import { api } from '@/services/api';
+import { api } from '@/services/apiClient';
 
 const menus = [
   {

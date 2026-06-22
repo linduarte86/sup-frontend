@@ -3,7 +3,7 @@
 import styles from './style.module.scss';
 import logoImg from '../../../public/logoApel1.svg';
 import Image from 'next/image';
-import { api } from '@/services/api';
+import { api } from '@/services/apiClient';
 import { useRouter } from 'next/navigation';
 import { FormEvent } from 'react';
 import { toast } from 'sonner';

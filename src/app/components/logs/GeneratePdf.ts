@@ -1,7 +1,8 @@
 import { jsPDF } from 'jspdf';
-import { api } from '@/services/api';
+import { api } from '@/services/apiServer';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { renderHeader, drawPageBorder, addPageNumber } from './layoutPdf';
 
 function getToken() {
   return document.cookie.split('; ').find(row => row.startsWith('session='))?.split('=')[1];
@@ -28,20 +29,19 @@ async function toDataURL(url: string, apiBase: string) {
       const backendBase = apiBase ?? window.location.origin;
       const absolute = url.startsWith('http') ? url : `${backendBase.replace(/\/$/, '')}${url}`;
 
-      // proxy endpoint on frontend (same origin) - use axios to get arraybuffer and preserve cookies
+      // proxy endpoint on frontend (same origin) - use fetch to preserve cookies
       if (url.startsWith('/api/')) {
         try {
-          const resp = await axios.get(absolute, { responseType: 'arraybuffer', withCredentials: true });
-          const arrayBuffer = resp.data as ArrayBuffer;
-          const base64 = arrayBufferToBase64(arrayBuffer);
-          return `data:image/png;base64,${base64}`;
-        } catch (e) {
-          console.error('toDataURL: axios proxy fetch failed', e);
-          // fallback to fetch
           const resp = await fetch(absolute, { credentials: 'include', cache: 'no-store' });
-          if (!resp.ok) return null;
+          if (!resp.ok) {
+            console.error('toDataURL: fetch proxy returned not ok', resp.status);
+            return null;
+          }
           const arrayBuffer = await resp.arrayBuffer();
           return `data:image/png;base64,${arrayBufferToBase64(arrayBuffer)}`;
+        } catch (e) {
+          console.error('toDataURL: proxy fetch failed', e);
+          return null;
         }
       }
 
@@ -106,98 +106,14 @@ export async function generatePdf(selected: any[], systemConfig?: any | null) {
 
   const doc = new jsPDF();
   let y = 12;
+  const pagesWithContent: number[] = [];
 
   try {
-    const pageW = doc.internal.pageSize.getWidth();
-    const pageH = doc.internal.pageSize.getHeight();
-    // borda externa
-    doc.setLineWidth(0.6);
-    doc.rect(8, 8, pageW - 16, pageH - 16);
-
-    // título central e data/hora à direita
-    doc.setFontSize(16);
-    doc.text('Relatório de Logs', pageW / 2, 18, { align: 'center' } as any);
-    const dataGeracao = new Date().toLocaleString('pt-BR');
-    doc.setFontSize(9);
-    doc.text(dataGeracao, pageW - 12, 18, { align: 'right' } as any);
-
-    let headerX = 14; // posição inicial do texto, ajustada para considerar logo se existir
-    let headerY = 20; // espaço abaixo do título (ajustado menor)
-    let headerHeight = 0;
-
-    if (config) {
-      const title = String(config.empresaName ?? '');
-      const contact = `${config.email ?? ''}${config.email ? ' | ' : ''}${config.telefone ?? ''}`.trim();
-      const addr = String(config.endereco ?? '');
-
-      // calcula alturas do bloco de texto e do logo
-      const splitAddr = addr ? doc.splitTextToSize(addr, 140) : [];
-      const textBlockHeight = addr ? (splitAddr.length * 6) + 20 : 20;
-      const imgW = 36; const imgH = 36;
-      const blockHeight = Math.max(imgH, textBlockHeight);
-
-      // topo do bloco do cabeçalho
-      const headerTop = headerY;
-
-      // posições para centralizar verticalmente dentro do bloco
-      const imageY = headerTop + (blockHeight - imgH) / 2;
-      const textTop = headerTop + (blockHeight - textBlockHeight) / 2;
-      const titleY = textTop + 6;
-      const contactY = textTop + 14;
-      const addrY = textTop + 20;
-
-      // desenha logo, se existir
-      if (config.logoUrl) {
-        const proxied = `/api/logo?p=${encodeURIComponent(config.logoUrl)}&t=${Date.now()}`;
-        console.log('GeneratePdf - proxied logo path:', proxied);
-        const dataUrl = await toDataURL(proxied, window.location.origin);
-        console.log('GeneratePdf - dataUrl present:', !!dataUrl);
-        if (dataUrl) {
-          try {
-            let fmt: any = 'PNG';
-            if (typeof dataUrl === 'string' && dataUrl.startsWith('data:image/jpeg')) fmt = 'JPEG';
-            else if (typeof dataUrl === 'string' && dataUrl.startsWith('data:image/png')) fmt = 'PNG';
-            try {
-              doc.addImage(dataUrl as string, fmt, 14, imageY, imgW, imgH);
-            } catch (e) {
-              console.error('addImage failed with format', fmt, e);
-              try { (doc as any).addImage(dataUrl, 14, imageY, imgW, imgH); } catch (er) { console.error('fallback addImage failed', er); }
-            }
-            headerX = 14 + imgW + 8;
-            headerHeight = imgH;
-          } catch (e) {
-            headerX = 14;
-          }
-        }
-      }
-
-      // desenha textos alinhados verticalmente ao centro do bloco
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(12);
-      doc.text(String(config.empresaName ?? 'Logs selecionados'), headerX, titleY);
-      doc.setFontSize(9);
-      if (contact) doc.text(contact, headerX, contactY);
-      if (addr) {
-        doc.text(splitAddr, headerX, addrY);
-        headerHeight = Math.max(headerHeight, textBlockHeight);
-      } else {
-        headerHeight = Math.max(headerHeight, 20);
-      }
-
-      // calcula bottom real do texto e da imagem e posiciona o separador abaixo
-      const addrLines = splitAddr.length || 0;
-      const addrBottom = addrY + Math.max(0, addrLines - 1) * 6 + 2; // pequeno offset
-      const imageBottom = imageY + imgH;
-      const separatorY = Math.max(headerTop + blockHeight, addrBottom, imageBottom) + 12; // padding extra
-      doc.setLineWidth(0.5);
-      doc.setDrawColor(0,0,0);
-      doc.line(12, separatorY, pageW - 12, separatorY);
-      y = separatorY + 10;
-    } else {
-      doc.setFontSize(14);
-      doc.text('Logs selecionados', 14, y);
-      y += 8;
-    }
+    // desenha borda e cabeçalho na primeira página
+    drawPageBorder(doc);
+    // passe a origin do frontend para buscar /api/logo proxy corretamente
+    y = await renderHeader(doc, config, window.location.origin, toDataURL);
+    pagesWithContent.push(1);
   } catch (e) {
     console.error('GeneratePdf header error', e);
     doc.setFontSize(14);
@@ -207,7 +123,10 @@ export async function generatePdf(selected: any[], systemConfig?: any | null) {
 
   doc.setFontSize(11);
 
-  selected.forEach((l: any, idx: number) => {
+  const pageH = doc.internal.pageSize.getHeight();
+  const contentBottom = pageH - 26; // margem inferior segura para evitar borda e numeração
+  for (let idx = 0; idx < selected.length; idx++) {
+    const l = selected[idx];
     const descricao = `${idx + 1}. Supervisão: ${l.equipamento?.description ?? l.message ?? '-'}`;
     const header = `${l.descricao ?? l.message ?? '-'} (${l.equipamento?.name ?? '-'})`;
     const created = `Data: ${l.created_at ?? l.timestamp ?? '-'} `;
@@ -219,17 +138,37 @@ export async function generatePdf(selected: any[], systemConfig?: any | null) {
     doc.text(created, 14, y);
     y += 6;
     if (Array.isArray(l.itens) && l.itens.length > 0) {
-      l.itens.forEach((it: any) => {
+      for (let j = 0; j < l.itens.length; j++) {
+        const it = l.itens[j];
         const line = `- ${it.tipo ?? ''}: ${it.descricao ?? ''} (Zona: ${it.zona?.name ?? '-'})`;
         const split = doc.splitTextToSize(line, 180);
         doc.text(split, 16, y);
         y += (split.length * 6);
-        if (y > 280) { doc.addPage(); y = 12; }
-      });
+        if (y > contentBottom) {
+          doc.addPage();
+          drawPageBorder(doc);
+          y = 12;
+          y = await renderHeader(doc, config, window.location.origin, toDataURL);
+          pagesWithContent.push(doc.getNumberOfPages());
+        }
+      }
     }
     y += 6;
-    if (y > 280) { doc.addPage(); y = 12; }
-  });
+    if (y > contentBottom) {
+      doc.addPage();
+      drawPageBorder(doc);
+      y = 12;
+      y = await renderHeader(doc, config, window.location.origin, toDataURL);
+      pagesWithContent.push(doc.getNumberOfPages());
+    }
+  }
+
+  // adicionar paginação em cada página
+  const total = doc.getNumberOfPages();
+  for (let p = 1; p <= total; p++) {
+    doc.setPage(p);
+    addPageNumber(doc, p, total);
+  }
 
   doc.save('logs.pdf');
 }

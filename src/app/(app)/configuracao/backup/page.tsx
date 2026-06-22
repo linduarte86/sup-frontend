@@ -6,7 +6,7 @@ import Backup from '@/app/components/backup/Backup';
 import BackupRestory from "@/app/components/backup/BackupRestory";
 import style from "./style.module.scss"
 import { hasPermission } from '@/lib/hasPermission';
-import { api } from '@/services/api';
+import { api } from '@/services/apiClient';
 
 export default function Page() {
   const [bkRestore, setCanCreate] = useState<boolean | null>(null);

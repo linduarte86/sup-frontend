@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from "react";
-import { api } from "@/services/api";
+import { api } from "@/services/apiClient";
 import { toast } from "sonner";
 import styles from "./style.module.scss";
 import { DatabaseBackup, ArchiveRestore } from 'lucide-react';

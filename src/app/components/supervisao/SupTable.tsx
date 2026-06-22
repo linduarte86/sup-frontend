@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import styles from './style.module.scss';
 import { Edit3, Trash2, LayoutGrid } from 'lucide-react';
-import { api } from '@/services/api';
+import { api } from '@/services/apiClient';
 import SupModal from './SupModal';
 import SupEditModal from './SupEditModal';
 import SupZonaEditModal from './SupZonaEditModal';

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import styles from '@/app/components/contatos/style.module.scss';
-import { api } from '@/services/api';
+import { api } from '@/services/apiClient';
 import ContatoModal from './ContatosModal';
 import ContatosEditModal from './ContatosEditModal';
 import { toast } from 'sonner';

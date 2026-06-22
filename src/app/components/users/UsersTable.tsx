@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import styles from './style.module.scss';
 import { Edit3, Trash2 } from 'lucide-react';
-import { api } from '@/services/api';
+import { api } from '@/services/apiClient';
 import UserEditModal from './UserEditModal';
 import { toast } from 'sonner';
 import { hasPermission } from '@/lib/hasPermission';

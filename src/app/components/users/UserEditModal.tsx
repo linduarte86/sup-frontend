@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from './modal.module.scss';
-import { api } from '@/services/api';
+import { api } from '@/services/apiClient';
 import { toast } from 'sonner';
 
 type User = {

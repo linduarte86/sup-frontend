@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.scss";
 import ToasterProvider from "@/app/components/ToasterProvider";
+import { PublicEnvScript } from "next-runtime-env";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,7 +25,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
+      <head>
+        <PublicEnvScript />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ToasterProvider />
         {children}

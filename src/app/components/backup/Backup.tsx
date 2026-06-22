@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from "react";
-import { api } from "@/services/api";
+import { api } from "@/services/apiClient";
 import { toast } from "sonner";
 import styles from "./style.module.scss";
 import { DatabaseBackup, ArchiveRestore } from 'lucide-react';
@@ -41,36 +41,7 @@ export default function Backup() {
       toast.error('Falha ao gerar backup.');
     }
   };
-  /*
-    // Função para restaurar backup
-    const handleRestoreBackup = async (event: React.ChangeEvent<HTMLInputElement> | File | null) => {
-      let file: File | undefined;
-      if (!event) return;
-      if (event instanceof File) file = event;
-      else file = event.target.files?.[0];
-      if (!file) return;
   
-      // confirmação antes de restaurar
-      if (!confirm('Tem certeza que deseja restaurar o backup? Esta ação é irreversível.')) return;
-  
-      const formData = new FormData();
-      formData.append('file', file);
-  
-      try {
-        await api.post('/backup/restore', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: getToken() ? `Bearer ${getToken()}` : ''
-          },
-        });
-  
-        toast.success('Backup restaurado com sucesso!');
-      } catch (error) {
-        console.error('Erro ao restaurar backup:', error);
-        toast.error('Falha ao restaurar backup.');
-      }
-    };
-  */
   return (
     <div className={styles.container}>
       <h2>Gerar Backup</h2>

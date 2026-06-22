@@ -21,7 +21,7 @@
 
 import { useEffect, useState, ChangeEvent, FormEvent } from 'react';
 import styles from './style.module.scss';
-import { api } from '@/services/api';
+import { api } from '@/services/apiClient';
 import { toast } from 'sonner';
 
 export default function Informacao() {
